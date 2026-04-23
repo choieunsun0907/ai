@@ -12,16 +12,24 @@ const state = {
   currentDetail: null,
 };
 
+/* ===== API 베이스 URL (절대경로 자동 감지) ===== */
+// 브라우저가 열린 도메인을 자동으로 읽어서 사용
+// → 로컬:      http://localhost:5060
+// → 샌드박스:  https://5060-xxxx.sandbox.novita.ai
+// → 실제서버:  https://price.ssakasports.com/
+// 환경이 바뀌어도 코드 수정 불필요!
+const BASE_URL = window.location.origin;
+
 /* ===== API 호출 ===== */
 async function apiSearch(query, sort = 'sim', start = 1, display = 20) {
-  const url = `/api/search?q=${encodeURIComponent(query)}&sort=${sort}&start=${start}&display=${display}`;
+  const url = `${BASE_URL}/api/search?q=${encodeURIComponent(query)}&sort=${sort}&start=${start}&display=${display}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
 async function apiPopular(category) {
-  const url = `/api/popular?category=${encodeURIComponent(category)}`;
+  const url = `${BASE_URL}/api/popular?category=${encodeURIComponent(category)}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
