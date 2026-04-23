@@ -16,6 +16,7 @@ const state = {
 // 브라우저가 열린 도메인을 자동으로 읽어서 사용
 // → 로컬:      http://localhost:5060
 // → 샌드박스:  https://5060-i8633dkrgikcaiinfwstx-5c13a017.sandbox.novita.ai/
+// → 실제서버:  https://choieunsun0907.github.io/ai/
 // → 실제서버:  https://price.ssakasports.com/
 // 환경이 바뀌어도 코드 수정 불필요!
 const BASE_URL = window.location.origin;
