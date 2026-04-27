@@ -263,6 +263,12 @@ function _renderDetailContent(item) {
   const isWished = state.wishlist.some(w => w.id === item.id);
   const safeId = String(item.id || '').replace(/'/g, "\\'");
 
+  /* ✅ URL을 HTML 속성 안에 안전하게 넣기 위해 & → &amp; 변환 */
+  function safeHref(url) {
+    if (!url || url === '#') return '#';
+    return url.replace(/&/g, '&amp;');
+  }
+
   return `
     <div class="detail-top">
       <div class="detail-img-section">
@@ -285,7 +291,7 @@ function _renderDetailContent(item) {
             ${bestShop ? `<div style="font-size:12px;color:#E8950E;font-weight:600;">${escHtml(bestShop.name)}</div>` : ''}
           </div>
           <div class="detail-btn-row">
-            <a href="${item.link || '#'}" target="_blank" rel="noopener" class="btn-orange">
+            <a href="${safeHref(item.link)}" target="_blank" rel="noopener" class="btn-orange">
               🛍️ 네이버 최저가 보기
             </a>
             <button class="btn-wishlist" onclick="toggleWishlistDetail('${safeId}')" id="wishBtn">
@@ -304,11 +310,9 @@ function _renderDetailContent(item) {
     <div class="shop-compare-section">
       <div class="shop-compare-title">🏪 쇼핑몰별 가격 비교</div>
       ${shops.length === 0
-        ? `<div style="padding:24px;color:#999;text-align:center;">쇼핑몰 정보를 불러오는 중...</div>`
-        : shops.map((shop, idx) => {
-            const shopUrl = shop.url || '#';
-            return `
-              <a href="${shopUrl}" target="_blank" rel="noopener" class="shop-row">
+        ? `<div style="padding:24px;color:#999;text-align:center;">⏳ 쇼핑몰 정보를 불러오는 중...</div>`
+        : shops.map((shop, idx) => `
+              <a href="${safeHref(shop.url)}" target="_blank" rel="noopener" class="shop-row">
                 <div class="shop-logo-wrap">${shop.logo || '🛒'}</div>
                 <div class="shop-info">
                   <div class="shop-name">
@@ -322,8 +326,7 @@ function _renderDetailContent(item) {
                   </div>
                 </div>
                 <div class="shop-arrow">→</div>
-              </a>`;
-          }).join('')
+              </a>`).join('')
       }
     </div>
   `;
@@ -343,7 +346,7 @@ async function showDetail(item) {
 
   const content = document.getElementById('detailContent');
 
-  // 우선 기본 UI 표시 (shops 없어도)
+  // 우선 기본 UI 표시
   content.innerHTML = _renderDetailContent(item);
   showPage('detail');
 
@@ -416,27 +419,28 @@ async function _ensureShops(item) {
     _registerItem(item);
     return item;
   }
-  // shops가 없으면 API로 가져오기
+  // ✅ shops가 없으면 /api/detail 엔드포인트로 빠르게 가져오기
   try {
-    const data = await apiSearch(item.title || item.id, 'sim', 1, 1);
-    const found = (data.items || []).find(i => i.id === item.id || i.title === item.title);
-    if (found && found.shops) {
-      item.shops = found.shops;
-    } else if (data.items && data.items[0] && data.items[0].shops) {
-      // 정확히 일치하지 않아도 첫 번째 검색 결과 shops 사용
-      item.shops = data.items[0].shops.map(s => ({
-        ...s,
-        name: s.name,
-        url: s.url,
-        price: s.price,
-        logo: s.logo,
-        badge: s.badge,
-      }));
+    const q   = encodeURIComponent(item.title || '');
+    const lnk = encodeURIComponent(item.link  || '');
+    const prc = item.lprice || 0;
+    const res = await fetch(`${BASE_URL}/api/detail?q=${q}&link=${lnk}&lprice=${prc}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.shops && data.shops.length > 0) {
+        item.shops = data.shops;
+      }
     }
   } catch (e) {
-    // shops 보완 실패 시 기본값 사용
+    console.warn('shops 재요청 실패:', e);
+  }
+  // API 실패 시 네이버 링크 하나라도 보여주기
+  if (!item.shops || item.shops.length === 0) {
     item.shops = [
-      { name: '네이버쇼핑', logo: '🛔️', url: item.link || '#', price: item.lprice || 0, badge: '최저가' }
+      { name: '네이버쇼핑', logo: '🛍️', url: item.link || '#', price: item.lprice || 0, badge: '최저가' },
+      { name: '쿠팡',      logo: '🛒', url: `https://www.coupang.com/np/search?q=${encodeURIComponent(item.title||'')}`, price: Math.round((item.lprice||0)*1.02), badge: '' },
+      { name: 'G마켓',    logo: '🏪', url: `https://www.gmarket.co.kr/n/search?keyword=${encodeURIComponent(item.title||'')}`, price: Math.round((item.lprice||0)*1.025), badge: '' },
+      { name: '11번가',   logo: '🏬', url: `https://search.11st.co.kr/Search.tmall?kwd=${encodeURIComponent(item.title||'')}`, price: Math.round((item.lprice||0)*1.03), badge: '' },
     ];
   }
   _registerItem(item);
