@@ -415,7 +415,7 @@ function renderWishlist() {
 }
 
 /* ===== 비교 ===== */
-const MAX_COMPARE = 4;
+const MAX_COMPARE = 6;
 
 // compareList 아이템들 registry에 등록 (shops가 없으면 API로 보완)
 async function _ensureShops(item) {
@@ -458,15 +458,20 @@ function toggleCompare(event, itemId) {
 
   const idx = state.compareList.findIndex(c => c.id === itemId);
   if (idx >= 0) {
+    // 이미 비교 중 → 제거
     state.compareList.splice(idx, 1);
     showToast('비교 목록에서 제거됐어요');
   } else {
     if (state.compareList.length >= MAX_COMPARE) {
-      showToast(`⚠️ 최대 ${MAX_COMPARE}개까지 비교할 수 있어요`);
-      return;
+      // ✅ FIFO 자동교체: 가장 먼저 추가한 상품 자동 제거 후 새 상품 추가
+      const removed = state.compareList.shift();
+      state.compareList.push(item);
+      const removedName = (removed.title || '').slice(0, 14);
+      showToast(`🔄 "${removedName}.." 제거 → 새 상품 추가됐어요!`);
+    } else {
+      state.compareList.push(item);
+      showToast(`📊 비교 목록에 추가됐어요! (${state.compareList.length}/${MAX_COMPARE})`);
     }
-    state.compareList.push(item);
-    showToast(`📊 비교 목록에 추가됐어요! (${state.compareList.length}/${MAX_COMPARE})`);
   }
   localStorage.setItem('compareList', JSON.stringify(state.compareList));
   refreshCards();
@@ -478,17 +483,23 @@ function toggleCompareFromDetail(itemId) {
   if (!item) return;
   const idx = state.compareList.findIndex(c => c.id === itemId);
   if (idx >= 0) {
+    // 이미 비교 중 → 제거
     state.compareList.splice(idx, 1);
     showToast('비교 목록에서 제거됐어요');
   } else {
     if (state.compareList.length >= MAX_COMPARE) {
-      showToast(`⚠️ 최대 ${MAX_COMPARE}개까지 비교할 수 있어요`);
-      return;
+      // ✅ FIFO 자동교체
+      const removed = state.compareList.shift();
+      state.compareList.push(item);
+      const removedName = (removed.title || '').slice(0, 14);
+      showToast(`🔄 "${removedName}.." 제거 → 새 상품 추가됐어요!`);
+    } else {
+      state.compareList.push(item);
+      showToast(`📊 비교 목록에 추가됐어요! (${state.compareList.length}/${MAX_COMPARE})`);
     }
-    state.compareList.push(item);
-    showToast(`📊 비교 목록에 추가됐어요! (${state.compareList.length}/${MAX_COMPARE})`);
   }
   localStorage.setItem('compareList', JSON.stringify(state.compareList));
+  refreshCards();
   updateCompareBadge();
 }
 

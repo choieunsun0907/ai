@@ -909,11 +909,11 @@ input { outline: none; border: none; }
 }
 .cmp-btn-del:hover { background: #C62828; color: white; border-color: #C62828; }
 
-/* ── 카드 그리드 (최대 4열) ── */
+/* ── 카드 그리드 (최대 6열) ── */
 .cmp-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
   padding: 16px 20px 48px;
 }
 
@@ -1168,6 +1168,12 @@ input { outline: none; border: none; }
 }
 
 /* ── 반응형 ── */
+@media (max-width: 1400px) {
+  .cmp-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+}
 @media (max-width: 1100px) {
   .cmp-grid {
     grid-template-columns: repeat(3, 1fr);
