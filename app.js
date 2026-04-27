@@ -6,7 +6,7 @@ const state = {
   currentSort: 'sim',   // 기본 정렬: 정확도순 (네이버 API 랭킹 기준)
   homeStart: 1,
   searchStart: 1,
-  homeCategory: '축구화',
+  homeCategory: '싸카닷컴 축구',
   wishlist: JSON.parse(localStorage.getItem('wishlist') || '[]'),
   compareList: JSON.parse(localStorage.getItem('compareList') || '[]'),
   currentDetail: null,
@@ -172,8 +172,10 @@ async function selectCategory(category, btn) {
 
   try {
     const data = await apiSearch(category, 'sim', 1, 16);
+    state.homeStart = 1;
     renderHomeGrid(data.items || [], false);
-    if ((data.total || 0) > 16) {
+    // 상품이 16개 이상이면 더보기 표시
+    if ((data.items || []).length >= 16) {
       document.getElementById('loadMoreWrap').style.display = 'block';
     }
   } catch (e) {
@@ -196,8 +198,10 @@ async function loadMore() {
   state.homeStart += 16;
   try {
     const data = await apiSearch(state.homeCategory, 'sim', state.homeStart, 16);
-    renderHomeGrid(data.items || [], true);
-    if (state.homeStart + 16 > (data.total || 0)) {
+    const items = data.items || [];
+    renderHomeGrid(items, true);
+    // 가져온 상품이 16개 미만이면 더보기 숨김
+    if (items.length < 16) {
       document.getElementById('loadMoreWrap').style.display = 'none';
     }
   } catch (e) {
@@ -928,5 +932,5 @@ window.addEventListener('DOMContentLoaded', () => {
   state.wishlist.forEach(item => _registerItem(item));
   state.compareList.forEach(item => _registerItem(item));
 
-  selectCategory('축구화', document.querySelector('.tab-btn.active'));
+  selectCategory('싸카닷컴 축구', document.querySelector('.tab-btn.active'));
 });

@@ -479,14 +479,22 @@ input { outline: none; border: none; }
   font-weight: 700;
 }
 .sort-wrap select {
-  padding: 8px 12px;
-  border: 1.5px solid var(--gray-200);
+  padding: 8px 32px 8px 12px;
+  border: 1.5px solid var(--blue-light);
   border-radius: 8px;
   font-size: 13px;
+  font-weight: 600;
   font-family: inherit;
-  color: var(--gray-800);
+  color: var(--blue-dark);
   background: var(--white);
   cursor: pointer;
+  appearance: auto;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.sort-wrap select:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(25,118,210,0.1);
 }
 
 /* ===== 상세 페이지 ===== */

@@ -64,11 +64,12 @@
   <section class="category-section">
     <div class="container">
       <div class="tab-row" id="categoryTabs">
-        <button class="tab-btn active" onclick="selectCategory('축구화', this)">⚽ 축구화</button>
+        <button class="tab-btn active" onclick="selectCategory('싸카닷컴 축구', this)">🛒 싸카닷컴</button>
+        <button class="tab-btn" onclick="selectCategory('축구화', this)">⚽ 축구화</button>
         <button class="tab-btn" onclick="selectCategory('축구유니폼', this)">👕 축구유니폼</button>
+        <button class="tab-btn" onclick="selectCategory('축구용품', this)">🎽 축구용품</button>
         <button class="tab-btn" onclick="selectCategory('국가대표 유니폼', this)">🇰🇷 국가대표</button>
         <button class="tab-btn" onclick="selectCategory('트레이닝복', this)">🏃 트레이닝복</button>
-        <button class="tab-btn" onclick="selectCategory('축구용품', this)">🎽 축구용품</button>
         <button class="tab-btn" onclick="selectCategory('오클리', this)">🕶️ 오클리</button>
         <button class="tab-btn" onclick="selectCategory('선글라스', this)">😎 선글라스</button>
       </div>
@@ -97,10 +98,11 @@
       <h2 id="searchResultTitle">검색결과</h2>
       <div class="sort-wrap">
         <select id="sortSelect" onchange="changeSortAndSearch()">
-          <option value="sim" selected>🏆 랭킹순 (추천)</option>
-          <option value="asc">💰 가격 낮은순</option>
-          <option value="dsc">💎 가격 높은순</option>
-          <option value="date">🆕 최신순</option>
+          <option value="sim" selected>네이버 랭킹순</option>
+          <option value="asc">낮은 가격순</option>
+          <option value="dsc">높은 가격순</option>
+          <option value="count">리뷰 많은순</option>
+          <option value="date">등록일순</option>
         </select>
       </div>
     </div>
