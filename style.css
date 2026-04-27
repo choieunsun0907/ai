@@ -593,6 +593,64 @@ input { outline: none; border: none; }
   box-shadow: 0 0 0 2px rgba(25,118,210,0.1);
 }
 
+/* ===== 검색결과 필터 탭 ===== */
+.search-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 2px solid #e8edf5;
+  margin: 0 0 20px 0;
+  padding: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.search-filter-tabs::-webkit-scrollbar { display: none; }
+
+.filter-tab {
+  position: relative;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.18s, border-color 0.18s;
+  font-family: inherit;
+  outline: none;
+}
+.filter-tab:hover {
+  color: var(--blue);
+  background: #f5f8ff;
+}
+.filter-tab.active {
+  color: var(--blue);
+  font-weight: 700;
+  border-bottom: 3px solid var(--blue);
+  background: none;
+}
+.filter-tab .tab-count {
+  display: inline-block;
+  font-size: 11px;
+  color: #888;
+  margin-left: 3px;
+  font-weight: 400;
+}
+.filter-tab.active .tab-count {
+  color: var(--blue);
+}
+
+@media (max-width: 600px) {
+  .filter-tab {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
 /* ===== 상세 페이지 ===== */
 /* ===== 페이지 네비게이션 바 ===== */
 .page-nav-bar {

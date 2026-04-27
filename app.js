@@ -4,6 +4,7 @@ const state = {
   prevPage: 'home',
   currentQuery: '',
   currentSort: 'sim',   // 기본 정렬: 정확도순 (네이버 API 랭킹 기준)
+  currentMallType: '',  // 검색결과 필터 탭: ''=전체, '1'=가격비교, '4'=네이버페이, '2'=백화점/홈쇼핑, '3'=쇼핑원도, 'overseas'=해외직구
   homeStart: 1,
   searchStart: 1,
   homeCategory: '싸카닷컴 축구',
@@ -48,8 +49,13 @@ const BASE_URL = (
   : window.location.origin;  // 로컬 / 샌드박스 직접 접속 → 자동 감지
 
 /* ===== API 호출 ===== */
-async function apiSearch(query, sort = 'sim', start = 1, display = 20) {
-  const url = `${BASE_URL}/api/search?q=${encodeURIComponent(query)}&sort=${sort}&start=${start}&display=${display}`;
+async function apiSearch(query, sort = 'sim', start = 1, display = 20, mallType = '') {
+  let url = `${BASE_URL}/api/search?q=${encodeURIComponent(query)}&sort=${sort}&start=${start}&display=${display}`;
+  if (mallType === 'overseas') {
+    url += '&overseas=1';
+  } else if (mallType) {
+    url += `&mall_type=${mallType}`;
+  }
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
@@ -109,13 +115,19 @@ async function triggerSearch(query) {
 
   showPage('search');
 
+  // 탭 초기화 (새 검색시 전체 탭으로)
+  state.currentMallType = '';
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  const allTab = document.querySelector('.filter-tab[data-mall-type=""]');
+  if (allTab) allTab.classList.add('active');
+
   document.getElementById('searchResultTitle').textContent = `"${query}" 검색결과`;
   document.getElementById('searchLoading').style.display = 'block';
   document.getElementById('searchGrid').innerHTML = '';
   document.getElementById('searchLoadMoreWrap').style.display = 'none';
 
   try {
-    const data = await apiSearch(query, state.currentSort, 1, 20);
+    const data = await apiSearch(query, state.currentSort, 1, 20, state.currentMallType);
     renderSearchResults(data.items || [], false);
     if ((data.total || 0) > 20) {
       document.getElementById('searchLoadMoreWrap').style.display = 'block';
@@ -142,7 +154,7 @@ function renderSearchResults(items, append) {
 async function loadMoreSearch() {
   state.searchStart += 20;
   try {
-    const data = await apiSearch(state.currentQuery, state.currentSort, state.searchStart, 20);
+    const data = await apiSearch(state.currentQuery, state.currentSort, state.searchStart, 20, state.currentMallType);
     renderSearchResults(data.items || [], true);
     if (state.searchStart + 20 > (data.total || 0)) {
       document.getElementById('searchLoadMoreWrap').style.display = 'none';
@@ -155,8 +167,51 @@ async function loadMoreSearch() {
 async function changeSortAndSearch() {
   state.currentSort = document.getElementById('sortSelect').value;
   if (state.currentQuery) {
-    await triggerSearch(state.currentQuery);
+    await _reloadSearchResults();
   }
+}
+
+/* 탭 클릭 시 mallType 변경 후 재검색 */
+async function selectMallType(mallType, btn) {
+  state.currentMallType = mallType;
+  state.searchStart = 1;
+
+  // 탭 활성화
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  if (!state.currentQuery) return;
+  await _reloadSearchResults();
+}
+
+/* 현재 쿼리+정렬+탭 조건으로 재검색 (공통) */
+async function _reloadSearchResults() {
+  document.getElementById('searchLoading').style.display = 'block';
+  document.getElementById('searchGrid').innerHTML = '';
+  document.getElementById('searchLoadMoreWrap').style.display = 'none';
+  state.searchStart = 1;
+
+  // 탭 라벨 업데이트
+  const tabLabel = _getMallTypeLabel(state.currentMallType);
+  const suffix = tabLabel ? ` · ${tabLabel}` : '';
+  document.getElementById('searchResultTitle').textContent = `"${state.currentQuery}" 검색결과${suffix}`;
+
+  try {
+    const data = await apiSearch(state.currentQuery, state.currentSort, 1, 20, state.currentMallType);
+    renderSearchResults(data.items || [], false);
+    if ((data.total || 0) > 20) {
+      document.getElementById('searchLoadMoreWrap').style.display = 'block';
+    }
+  } catch (e) {
+    document.getElementById('searchGrid').innerHTML = `<div style="padding:32px;color:#999;grid-column:1/-1;text-align:center;">⚠️ 검색 실패: ${e.message}</div>`;
+  } finally {
+    document.getElementById('searchLoading').style.display = 'none';
+  }
+}
+
+function _getMallTypeLabel(mallType) {
+  const map = { '': '', '1': '가격비교', '2': '백화점/홈쇼핑', '3': '쇼핑원도', '4': '네이버페이', 'overseas': '해외직구' };
+  return map[mallType] || '';
 }
 
 

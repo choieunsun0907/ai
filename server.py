@@ -51,19 +51,20 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────
 # 네이버 쇼핑 API
 # ──────────────────────────────────────────
-def search_naver(query, display=20, start=1, sort='sim', overseas=False):
+def search_naver(query, display=20, start=1, sort='sim', overseas=False, mall_type=''):
     """네이버 쇼핑 API 검색
     overseas=True: 해외직구 포함 (exclude 파라미터 미사용)
-    overseas=False: 국내 위주 (exclude=used:rental:cbshop 사용하면 중고 제외 가능)
+    overseas=False: 국내 위주
+    mall_type: ''=전체, '1'=가격비교, '2'=백화점/홈쇼핑, '3'=오픈마켓/쇼핑원도, '4'=네이버페이
     """
     encoded_query = urllib.parse.quote(query)
-    # 네이버 쇼핑 API: exclude 파라미터로 해외직구 제외 가능
-    # exclude=cbshop → 해외직구(CB쇼핑) 제외
-    # 해외 포함이면 exclude 생략, 해외 제외면 exclude=cbshop 추가
+    # 해외직구 탭이면 exclude 생략, 아니면 cbshop 제외
     exclude_param = '' if overseas else '&exclude=cbshop'
+    # mallType 파라미터 (네이버 쇼핑 API 공식 지원)
+    mall_type_param = f'&mallType={mall_type}' if mall_type else ''
     url = (
         f'https://openapi.naver.com/v1/search/shop.json'
-        f'?query={encoded_query}&display={display}&start={start}&sort={sort}{exclude_param}'
+        f'?query={encoded_query}&display={display}&start={start}&sort={sort}{exclude_param}{mall_type_param}'
     )
     req = urllib.request.Request(url)
     req.add_header('X-Naver-Client-Id',     NAVER_CLIENT_ID)
@@ -171,11 +172,12 @@ class PriceHubHandler(SimpleHTTPRequestHandler):
 
     # ── 검색 API ──
     def handle_search(self, params):
-        query   = params.get('q', [''])[0]
-        sort    = params.get('sort', ['sim'])[0]
-        display = int(params.get('display', ['20'])[0])
-        start   = int(params.get('start', ['1'])[0])
-        overseas = params.get('overseas', ['0'])[0] == '1'
+        query     = params.get('q', [''])[0]
+        sort      = params.get('sort', ['sim'])[0]
+        display   = int(params.get('display', ['20'])[0])
+        start     = int(params.get('start', ['1'])[0])
+        overseas  = params.get('overseas', ['0'])[0] == '1'
+        mall_type = params.get('mall_type', [''])[0]  # 필터 탭: 1=가격비교, 2=백화점/홈쇼핑, 3=쇼핑원도, 4=네이버페이
 
         # display 범위 제한 (1~100)
         display = max(1, min(100, display))
@@ -185,7 +187,7 @@ class PriceHubHandler(SimpleHTTPRequestHandler):
             return
 
         try:
-            data    = search_naver(query, display=display, start=start, sort=sort, overseas=overseas)
+            data    = search_naver(query, display=display, start=start, sort=sort, overseas=overseas, mall_type=mall_type)
             items   = data.get('items', [])
             results = []
 

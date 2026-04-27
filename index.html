@@ -104,8 +104,17 @@
           <option value="count">리뷰 많은순</option>
           <option value="date">등록일순</option>
         </select>
-
       </div>
+    </div>
+
+    <!-- 검색결과 필터 탭 -->
+    <div class="search-filter-tabs" id="searchFilterTabs">
+      <button class="filter-tab active" data-mall-type="" onclick="selectMallType('', this)">전체</button>
+      <button class="filter-tab" data-mall-type="1" onclick="selectMallType('1', this)">가격비교</button>
+      <button class="filter-tab" data-mall-type="4" onclick="selectMallType('4', this)">네이버페이</button>
+      <button class="filter-tab" data-mall-type="2" onclick="selectMallType('2', this)">백화점/홈쇼핑</button>
+      <button class="filter-tab" data-mall-type="3" onclick="selectMallType('3', this)">쇼핑원도</button>
+      <button class="filter-tab" data-mall-type="overseas" onclick="selectMallType('overseas', this)">해외직구</button>
     </div>
 
     <div id="searchLoading" class="loading-wrap" style="display:none">
