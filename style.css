@@ -227,6 +227,96 @@ input { outline: none; border: none; }
 }
 .hero-search-btn:hover { background: var(--orange-dark); }
 
+/* ===== 검색 옵션 (해외 체크박스 + 검색수 선택) ===== */
+.search-options {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 10px 0 4px;
+}
+.search-opt-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 20px;
+  padding: 6px 14px;
+  transition: background 0.2s;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  user-select: none;
+}
+.search-opt-item:hover {
+  background: rgba(255,255,255,0.28);
+}
+.search-opt-item input[type="checkbox"] {
+  accent-color: #fff;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+.opt-icon { font-size: 15px; }
+.opt-label { font-size: 13px; }
+.search-count-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 20px;
+  padding: 6px 14px;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+}
+.search-count-sel {
+  background: rgba(255,255,255,0.25);
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 8px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 2px 8px;
+  cursor: pointer;
+  outline: none;
+}
+.search-count-sel option {
+  color: #333;
+  background: #fff;
+}
+
+/* 검색결과 페이지 inline 옵션 */
+.search-opt-inline {
+  background: none;
+  border: 1.5px solid var(--blue-light);
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: var(--blue-dark);
+  margin-left: 6px;
+}
+.search-opt-inline:hover {
+  background: rgba(25,118,210,0.07);
+}
+.sort-wrap .search-count-sel {
+  background: var(--white);
+  border: 1.5px solid var(--blue-light);
+  border-radius: 8px;
+  color: var(--blue-dark);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 12px;
+  margin-left: 6px;
+}
+.sort-wrap .search-count-sel option {
+  color: #333;
+  background: #fff;
+}
+
 .hero-chips {
   display: flex;
   flex-wrap: wrap;
@@ -478,8 +568,14 @@ input { outline: none; border: none; }
   font-size: 20px;
   font-weight: 700;
 }
+.sort-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 .sort-wrap select {
-  padding: 8px 32px 8px 12px;
+  padding: 8px 12px;
   border: 1.5px solid var(--blue-light);
   border-radius: 8px;
   font-size: 13px;

@@ -48,6 +48,24 @@
                onkeypress="if(event.key==='Enter') doHeroSearch()">
         <button onclick="doHeroSearch()" class="hero-search-btn">🔍 검색</button>
       </div>
+      <!-- 검색 옵션 -->
+      <div class="search-options">
+        <label class="search-opt-item">
+          <input type="checkbox" id="includeOverseas" onchange="refreshSearchOptions()">
+          <span class="opt-icon">🌏</span>
+          <span class="opt-label">해외 직구 포함</span>
+        </label>
+        <div class="search-count-wrap">
+          <span class="opt-label">검색 수:</span>
+          <select id="searchDisplayCount" class="search-count-sel" onchange="refreshSearchOptions()">
+            <option value="10">10개</option>
+            <option value="20" selected>20개</option>
+            <option value="40">40개</option>
+            <option value="80">80개</option>
+            <option value="100">100개</option>
+          </select>
+        </div>
+      </div>
       <div class="hero-chips">
         <span class="chip" onclick="searchChip('축구화')">⚽ 축구화</span>
         <span class="chip" onclick="searchChip('축구유니폼')">👕 축구유니폼</span>
@@ -103,6 +121,18 @@
           <option value="dsc">높은 가격순</option>
           <option value="count">리뷰 많은순</option>
           <option value="date">등록일순</option>
+        </select>
+        <label class="search-opt-item search-opt-inline" title="해외 직구 상품 포함">
+          <input type="checkbox" id="includeOverseasSearch" onchange="changeSortAndSearch()">
+          <span class="opt-icon">🌏</span>
+          <span class="opt-label">해외 포함</span>
+        </label>
+        <select id="searchDisplayCountSearch" class="search-count-sel" onchange="changeSortAndSearch()">
+          <option value="10">10개</option>
+          <option value="20" selected>20개</option>
+          <option value="40">40개</option>
+          <option value="80">80개</option>
+          <option value="100">100개</option>
         </select>
       </div>
     </div>

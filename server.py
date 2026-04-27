@@ -51,12 +51,19 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────
 # 네이버 쇼핑 API
 # ──────────────────────────────────────────
-def search_naver(query, display=20, start=1, sort='sim'):
-    """네이버 쇼핑 API 검색"""
+def search_naver(query, display=20, start=1, sort='sim', overseas=False):
+    """네이버 쇼핑 API 검색
+    overseas=True: 해외직구 포함 (exclude 파라미터 미사용)
+    overseas=False: 국내 위주 (exclude=used:rental:cbshop 사용하면 중고 제외 가능)
+    """
     encoded_query = urllib.parse.quote(query)
+    # 네이버 쇼핑 API: exclude 파라미터로 해외직구 제외 가능
+    # exclude=cbshop → 해외직구(CB쇼핑) 제외
+    # 해외 포함이면 exclude 생략, 해외 제외면 exclude=cbshop 추가
+    exclude_param = '' if overseas else '&exclude=cbshop'
     url = (
         f'https://openapi.naver.com/v1/search/shop.json'
-        f'?query={encoded_query}&display={display}&start={start}&sort={sort}'
+        f'?query={encoded_query}&display={display}&start={start}&sort={sort}{exclude_param}'
     )
     req = urllib.request.Request(url)
     req.add_header('X-Naver-Client-Id',     NAVER_CLIENT_ID)
@@ -168,13 +175,17 @@ class PriceHubHandler(SimpleHTTPRequestHandler):
         sort    = params.get('sort', ['sim'])[0]
         display = int(params.get('display', ['20'])[0])
         start   = int(params.get('start', ['1'])[0])
+        overseas = params.get('overseas', ['0'])[0] == '1'
+
+        # display 범위 제한 (1~100)
+        display = max(1, min(100, display))
 
         if not query:
             self.send_json({'error': '검색어를 입력하세요', 'items': []})
             return
 
         try:
-            data    = search_naver(query, display=display, start=start, sort=sort)
+            data    = search_naver(query, display=display, start=start, sort=sort, overseas=overseas)
             items   = data.get('items', [])
             results = []
 

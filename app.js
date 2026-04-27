@@ -47,9 +47,36 @@ const BASE_URL = (
   ? SANDBOX_API          // GitHub Pages / 실제서버 → 샌드박스 API
   : window.location.origin;  // 로컬 / 샌드박스 직접 접속 → 자동 감지
 
+/* ===== 검색 옵션 헬퍼 ===== */
+function getSearchOptions() {
+  // 현재 페이지에 따라 적절한 컨트롤에서 값 읽기
+  const isSearchPage = state.currentPage === 'search';
+  const overseasEl = isSearchPage
+    ? document.getElementById('includeOverseasSearch')
+    : document.getElementById('includeOverseas');
+  const countEl = isSearchPage
+    ? document.getElementById('searchDisplayCountSearch')
+    : document.getElementById('searchDisplayCount');
+
+  const overseas = overseasEl ? overseasEl.checked : false;
+  const count = countEl ? parseInt(countEl.value, 10) : 20;
+  return { overseas, count };
+}
+
+// 홈 검색 옵션 변경시 (체크박스/카운트) → 현재 카테고리 재로드
+function refreshSearchOptions() {
+  if (state.currentQuery) {
+    triggerSearch(state.currentQuery);
+  }
+}
+
 /* ===== API 호출 ===== */
-async function apiSearch(query, sort = 'sim', start = 1, display = 20) {
-  const url = `${BASE_URL}/api/search?q=${encodeURIComponent(query)}&sort=${sort}&start=${start}&display=${display}`;
+async function apiSearch(query, sort = 'sim', start = 1, display = 20, overseas = false) {
+  // 해외 직구 포함 옵션: query 뒤에 '해외직구' 추가 여부로 처리
+  // Naver API는 filter 파라미터 없으므로 query 조작 방식 사용
+  const finalQuery = overseas ? query : query;
+  const excludeParam = overseas ? '' : '&exclude=used:rental:cbshop';
+  const url = `${BASE_URL}/api/search?q=${encodeURIComponent(finalQuery)}&sort=${sort}&start=${start}&display=${display}&overseas=${overseas ? '1' : '0'}${excludeParam}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
@@ -108,15 +135,30 @@ async function triggerSearch(query) {
   document.getElementById('headerSearchInput').value = query;
 
   showPage('search');
-  document.getElementById('searchResultTitle').textContent = `"${query}" 검색결과`;
+
+  // 검색 페이지 옵션 동기화
+  const homeCount = document.getElementById('searchDisplayCount');
+  const searchCount = document.getElementById('searchDisplayCountSearch');
+  if (homeCount && searchCount && state.currentPage !== 'search') {
+    searchCount.value = homeCount.value;
+  }
+  const homeOverseas = document.getElementById('includeOverseas');
+  const searchOverseas = document.getElementById('includeOverseasSearch');
+  if (homeOverseas && searchOverseas && state.currentPage !== 'search') {
+    searchOverseas.checked = homeOverseas.checked;
+  }
+
+  const { overseas, count } = getSearchOptions();
+  const overseasLabel = overseas ? ' 🌏해외포함' : '';
+  document.getElementById('searchResultTitle').textContent = `"${query}" 검색결과${overseasLabel}`;
   document.getElementById('searchLoading').style.display = 'block';
   document.getElementById('searchGrid').innerHTML = '';
   document.getElementById('searchLoadMoreWrap').style.display = 'none';
 
   try {
-    const data = await apiSearch(query, state.currentSort, 1);
+    const data = await apiSearch(query, state.currentSort, 1, count, overseas);
     renderSearchResults(data.items || [], false);
-    if ((data.total || 0) > 20) {
+    if ((data.total || 0) > count) {
       document.getElementById('searchLoadMoreWrap').style.display = 'block';
     }
   } catch (e) {
@@ -139,11 +181,12 @@ function renderSearchResults(items, append) {
 }
 
 async function loadMoreSearch() {
-  state.searchStart += 20;
+  const { overseas, count } = getSearchOptions();
+  state.searchStart += count;
   try {
-    const data = await apiSearch(state.currentQuery, state.currentSort, state.searchStart);
+    const data = await apiSearch(state.currentQuery, state.currentSort, state.searchStart, count, overseas);
     renderSearchResults(data.items || [], true);
-    if (state.searchStart + 20 > (data.total || 0)) {
+    if (state.searchStart + count > (data.total || 0)) {
       document.getElementById('searchLoadMoreWrap').style.display = 'none';
     }
   } catch (e) {
@@ -156,6 +199,12 @@ async function changeSortAndSearch() {
   if (state.currentQuery) {
     await triggerSearch(state.currentQuery);
   }
+}
+
+function syncOverseasCheckboxes() {
+  const home = document.getElementById('includeOverseas');
+  const search = document.getElementById('includeOverseasSearch');
+  if (home && search) search.checked = home.checked;
 }
 
 /* ===== 홈 카테고리 ===== */
@@ -222,7 +271,7 @@ function createProductCard(item) {
       <img src="${item.image || 'https://via.placeholder.com/300x300?text=No+Image'}" 
            alt="${escHtml(item.title)}" 
            onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'">
-      <div class="card-badge">최저가</div>
+      <!-- card-badge 제거됨 -->
       <div class="card-actions">
         <button class="card-action-btn ${isWished ? 'wishlisted' : ''}" 
                 onclick="toggleWishlist(event, '${escAttr(item.id)}')" 
