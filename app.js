@@ -121,7 +121,10 @@ async function triggerSearch(query) {
   // 탭 카운트 초기화
   _resetTabCounts();
 
-  document.getElementById('searchResultTitle').textContent = `"${query}" 검색결과`;
+  document.getElementById('searchResultTitle').textContent = '"' + query + '" 검색결과';
+  // 안내문 초기화
+  const infoEl = document.getElementById('searchCountInfo');
+  if (infoEl) infoEl.style.display = 'none';
   document.getElementById('searchLoading').style.display = 'block';
   document.getElementById('searchGrid').innerHTML = '';
   document.getElementById('searchLoadMoreWrap').style.display = 'none';
@@ -208,14 +211,38 @@ async function _reloadSearchResults() {
   try {
     const data = await apiSearch(state.currentQuery, state.currentSort, 1, 20, state.currentMallType);
     renderSearchResults(data.items || [], false);
-    if (data.tab_counts) _updateTabCounts(data.tab_counts, data.total || 0);
+    if (data.tab_counts) {
+      _updateTabCounts(data.tab_counts, data.total || 0);
+    }
+    // 해외직구 탭일 때 해외직구 탭에도 total 표시
+    if (state.currentMallType === 'overseas') {
+      _updateOverseasTabCount(data.total || 0);
+    }
     if ((data.items || []).length >= 20) {
       document.getElementById('searchLoadMoreWrap').style.display = 'block';
     }
   } catch (e) {
-    document.getElementById('searchGrid').innerHTML = `<div style="padding:32px;color:#999;grid-column:1/-1;text-align:center;">⚠️ 검색 실패: ${e.message}</div>`;
+    document.getElementById('searchGrid').innerHTML = '<div style="padding:32px;color:#999;grid-column:1/-1;text-align:center;">⚠️ 검색 실패: ' + e.message + '</div>';
   } finally {
     document.getElementById('searchLoading').style.display = 'none';
+  }
+}
+
+/* 해외직구 탭 카운트 별도 표시 */
+function _updateOverseasTabCount(total) {
+  const tab = document.querySelector('.filter-tab[data-mall-type="overseas"]');
+  if (!tab) return;
+  let span = tab.querySelector('.tab-count');
+  if (!span) { span = document.createElement('span'); span.className = 'tab-count'; tab.appendChild(span); }
+  span.textContent = total > 0 ? ' 약 ' + total.toLocaleString() + '건' : '';
+
+  // 안내문도 해외직구 기준으로 업데이트
+  const infoEl = document.getElementById('searchCountInfo');
+  if (infoEl && total > 0) {
+    infoEl.style.display = 'flex';
+    infoEl.innerHTML =
+      '<span class="sci-total">해외직구 포함 검색결과: 약 <strong>' + total.toLocaleString() + '</strong>건</span>' +
+      '<span class="sci-note">※ 실제 네이버 쇼핑 검색수와 다를 수 있습니다 (네이버 Open API 특성)</span>';
   }
 }
 
@@ -231,22 +258,40 @@ function _resetTabCounts() {
 
 /* 탭 카운트 업데이트 */
 function _updateTabCounts(counts, total) {
-  // 전체 탭: API total 값
+  // 전체 탭: '약 N건' 형식으로 표시 (API total은 네이버 웹과 다를 수 있음)
   const allTab = document.querySelector('.filter-tab[data-mall-type=""]');
   if (allTab) {
     let span = allTab.querySelector('.tab-count');
     if (!span) { span = document.createElement('span'); span.className = 'tab-count'; allTab.appendChild(span); }
-    span.textContent = total > 0 ? ` ${total.toLocaleString()}` : '';
+    span.textContent = total > 0 ? ' 약 ' + total.toLocaleString() + '건' : '';
   }
-  // 각 탭 카운트
+  // 각 탭 카운트 (현재 가져온 100개 중 해당 탭 수)
   const tabMap = { 'price': counts.price, 'npay': counts.npay, 'open': counts.open };
-  Object.entries(tabMap).forEach(([mt, cnt]) => {
-    const tab = document.querySelector(`.filter-tab[data-mall-type="${mt}"]`);
+  Object.entries(tabMap).forEach(function(entry) {
+    var mt = entry[0], cnt = entry[1];
+    const tab = document.querySelector('.filter-tab[data-mall-type="' + mt + '"]');
     if (!tab) return;
     let span = tab.querySelector('.tab-count');
     if (!span) { span = document.createElement('span'); span.className = 'tab-count'; tab.appendChild(span); }
-    span.textContent = cnt > 0 ? ` ${cnt}` : '';
+    span.textContent = cnt > 0 ? ' ' + cnt : '';
   });
+
+  // 검색수 안내문 업데이트
+  _updateSearchCountInfo(total, counts);
+}
+
+/* 검색수 안내문 표시 */
+function _updateSearchCountInfo(total, counts) {
+  const infoEl = document.getElementById('searchCountInfo');
+  if (!infoEl) return;
+  if (!total || total === 0) {
+    infoEl.style.display = 'none';
+    return;
+  }
+  infoEl.style.display = 'flex';
+  infoEl.innerHTML =
+    '<span class="sci-total">네이버 API 검색결과: 약 <strong>' + total.toLocaleString() + '</strong>건</span>' +
+    '<span class="sci-note">※ 실제 네이버 쇼핑 검색수와 다를 수 있습니다 (네이버 Open API 특성)</span>';
 }
 
 
