@@ -120,6 +120,8 @@ async function triggerSearch(query) {
   document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
   const allTab = document.querySelector('.filter-tab[data-mall-type=""]');
   if (allTab) allTab.classList.add('active');
+  // 탭 카운트 초기화
+  _resetTabCounts();
 
   document.getElementById('searchResultTitle').textContent = `"${query}" 검색결과`;
   document.getElementById('searchLoading').style.display = 'block';
@@ -127,9 +129,11 @@ async function triggerSearch(query) {
   document.getElementById('searchLoadMoreWrap').style.display = 'none';
 
   try {
-    const data = await apiSearch(query, state.currentSort, 1, 20, state.currentMallType);
+    const data = await apiSearch(query, state.currentSort, 1, 20, '');
     renderSearchResults(data.items || [], false);
-    if ((data.total || 0) > 20) {
+    // 탭 카운트 업데이트
+    if (data.tab_counts) _updateTabCounts(data.tab_counts, data.total || 0);
+    if ((data.items || []).length >= 20) {
       document.getElementById('searchLoadMoreWrap').style.display = 'block';
     }
   } catch (e) {
@@ -199,7 +203,8 @@ async function _reloadSearchResults() {
   try {
     const data = await apiSearch(state.currentQuery, state.currentSort, 1, 20, state.currentMallType);
     renderSearchResults(data.items || [], false);
-    if ((data.total || 0) > 20) {
+    if (data.tab_counts) _updateTabCounts(data.tab_counts, data.total || 0);
+    if ((data.items || []).length >= 20) {
       document.getElementById('searchLoadMoreWrap').style.display = 'block';
     }
   } catch (e) {
@@ -212,6 +217,31 @@ async function _reloadSearchResults() {
 function _getMallTypeLabel(mallType) {
   const map = { '': '', '1': '가격비교', '2': '백화점/홈쇼핑', '3': '쇼핑원도', '4': '네이버페이', 'overseas': '해외직구' };
   return map[mallType] || '';
+}
+
+/* 탭 카운트 초기화 */
+function _resetTabCounts() {
+  document.querySelectorAll('.filter-tab .tab-count').forEach(el => el.textContent = '');
+}
+
+/* 탭 카운트 업데이트 */
+function _updateTabCounts(counts, total) {
+  // 전체 탭: API total 값
+  const allTab = document.querySelector('.filter-tab[data-mall-type=""]');
+  if (allTab) {
+    let span = allTab.querySelector('.tab-count');
+    if (!span) { span = document.createElement('span'); span.className = 'tab-count'; allTab.appendChild(span); }
+    span.textContent = total > 0 ? ` ${total.toLocaleString()}` : '';
+  }
+  // 각 탭 카운트
+  const tabMap = { '1': counts.price, '4': counts.npay, '2': counts.dept, '3': counts.open };
+  Object.entries(tabMap).forEach(([mt, cnt]) => {
+    const tab = document.querySelector(`.filter-tab[data-mall-type="${mt}"]`);
+    if (!tab) return;
+    let span = tab.querySelector('.tab-count');
+    if (!span) { span = document.createElement('span'); span.className = 'tab-count'; tab.appendChild(span); }
+    span.textContent = cnt > 0 ? ` ${cnt}` : '';
+  });
 }
 
 
