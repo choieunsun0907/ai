@@ -234,14 +234,14 @@ function _updateOverseasTabCount(total) {
   if (!tab) return;
   let span = tab.querySelector('.tab-count');
   if (!span) { span = document.createElement('span'); span.className = 'tab-count'; tab.appendChild(span); }
-  span.textContent = total > 0 ? ' 약 ' + total.toLocaleString() + '건' : '';
+  span.textContent = total > 0 ? ' ' + total.toLocaleString() + '건' : '';
 
   // 안내문도 해외직구 기준으로 업데이트
   const infoEl = document.getElementById('searchCountInfo');
   if (infoEl && total > 0) {
     infoEl.style.display = 'flex';
     infoEl.innerHTML =
-      '<span class="sci-total">해외직구 포함 검색결과: 약 <strong>' + total.toLocaleString() + '</strong>건</span>' +
+      '<span class="sci-total">해외직구 포함 검색결과: <strong>' + total.toLocaleString() + '</strong>건</span>' +
       '<span class="sci-note">※ 실제 네이버 쇼핑 검색수와 다를 수 있습니다 (네이버 Open API 특성)</span>';
   }
 }
@@ -258,12 +258,12 @@ function _resetTabCounts() {
 
 /* 탭 카운트 업데이트 */
 function _updateTabCounts(counts, total) {
-  // 전체 탭: '약 N건' 형식으로 표시 (API total은 네이버 웹과 다를 수 있음)
+  // 전체 탭: API total 건수 표시
   const allTab = document.querySelector('.filter-tab[data-mall-type=""]');
   if (allTab) {
     let span = allTab.querySelector('.tab-count');
     if (!span) { span = document.createElement('span'); span.className = 'tab-count'; allTab.appendChild(span); }
-    span.textContent = total > 0 ? ' 약 ' + total.toLocaleString() + '건' : '';
+    span.textContent = total > 0 ? ' ' + total.toLocaleString() + '건' : '';
   }
   // 각 탭 카운트 (현재 가져온 100개 중 해당 탭 수)
   const tabMap = { 'price': counts.price, 'npay': counts.npay, 'open': counts.open };
@@ -290,7 +290,7 @@ function _updateSearchCountInfo(total, counts) {
   }
   infoEl.style.display = 'flex';
   infoEl.innerHTML =
-    '<span class="sci-total">네이버 API 검색결과: 약 <strong>' + total.toLocaleString() + '</strong>건</span>' +
+    '<span class="sci-total">네이버 API 검색결과: <strong>' + total.toLocaleString() + '</strong>건</span>' +
     '<span class="sci-note">※ 실제 네이버 쇼핑 검색수와 다를 수 있습니다 (네이버 Open API 특성)</span>';
 }
 
