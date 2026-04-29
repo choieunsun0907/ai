@@ -454,7 +454,13 @@ function _renderDetailContent(item) {
         ? `<div style="padding:24px;color:#999;text-align:center;">⏳ 쇼핑몰 정보를 불러오는 중...</div>`
         : shops.map((shop, idx) => `
               <a href="${safeHref(shop.url)}" target="_blank" rel="noopener" class="shop-row">
-                <div class="shop-logo-wrap">${shop.logo || '🛒'}</div>
+                <div class="shop-logo-wrap">
+                  ${shop.logo && shop.logo.startsWith('http')
+                    ? `<img src="${shop.logo}" alt="${escHtml(shop.name)}" class="shop-logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                    : ''
+                  }
+                  <span class="shop-logo-fallback" style="${shop.logo && shop.logo.startsWith('http') ? 'display:none' : 'display:flex'}">${escHtml(shop.name.charAt(0))}</span>
+                </div>
                 <div class="shop-info">
                   <div class="shop-name">
                     ${escHtml(shop.name)}
@@ -578,10 +584,10 @@ async function _ensureShops(item) {
   // API 실패 시 네이버 링크 하나라도 보여주기
   if (!item.shops || item.shops.length === 0) {
     item.shops = [
-      { name: '네이버쇼핑', logo: '🛍️', url: item.link || '#', price: item.lprice || 0, badge: '최저가' },
-      { name: '쿠팡',      logo: '🛒', url: `https://www.coupang.com/np/search?q=${encodeURIComponent(item.title||'')}`, price: Math.round((item.lprice||0)*1.02), badge: '' },
-      { name: 'G마켓',    logo: '🏪', url: `https://www.gmarket.co.kr/n/search?keyword=${encodeURIComponent(item.title||'')}`, price: Math.round((item.lprice||0)*1.025), badge: '' },
-      { name: '11번가',   logo: '🏬', url: `https://search.11st.co.kr/Search.tmall?kwd=${encodeURIComponent(item.title||'')}`, price: Math.round((item.lprice||0)*1.03), badge: '' },
+      { name: '네이버쇼핑', logo: 'https://shopv.pstatic.net/web/ads/favicon.ico', url: item.link || '#', price: item.lprice || 0, badge: '최저가' },
+      { name: '쿠팡',      logo: 'https://www.coupang.com/favicon.ico', url: `https://www.coupang.com/np/search?q=${encodeURIComponent(item.title||'')}`, price: Math.round((item.lprice||0)*1.02), badge: '' },
+      { name: 'G마켓',    logo: 'https://www.gmarket.co.kr/favicon.ico', url: `https://www.gmarket.co.kr/n/search?keyword=${encodeURIComponent(item.title||'')}`, price: Math.round((item.lprice||0)*1.025), badge: '' },
+      { name: '11번가',   logo: 'https://www.11st.co.kr/favicon.ico', url: `https://search.11st.co.kr/Search.tmall?kwd=${encodeURIComponent(item.title||'')}`, price: Math.round((item.lprice||0)*1.03), badge: '' },
     ];
   }
   _registerItem(item);
